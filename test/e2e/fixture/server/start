@@ -114,6 +114,10 @@ echo "$ACCESS_AUD" > "$CCTR_FIXTURE_DIR/access-aud.txt"
 log "Access app ID: $ACCESS_APP_ID"
 log "Access AUD: $ACCESS_AUD"
 
+# Step 4: Set CF_ACCESS_AUD secret (must be after access app is created)
+log "Step 4: Setting CF_ACCESS_AUD secret..."
+echo "$ACCESS_AUD" | npx wrangler secret put CF_ACCESS_AUD --name "$WORKER_NAME" >&2
+
 log "Cloud e2e infrastructure deployed!"
 log "Worker URL: $WORKER_URL"
 log "Gateway token: $GATEWAY_TOKEN"
