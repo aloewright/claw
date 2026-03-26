@@ -118,7 +118,9 @@ The easiest way to protect your worker is using the built-in Cloudflare Access i
 
 ### 2. Set Access Secrets
 
-After enabling Cloudflare Access, set the secrets so the worker can validate JWTs:
+After enabling Cloudflare Access, set the secrets so the worker can validate JWTs. You can use either the CLI or the Cloudflare dashboard:
+
+**Option A: CLI**
 
 ```bash
 # Your Cloudflare Access team domain (e.g., "myteam.cloudflareaccess.com")
@@ -127,6 +129,10 @@ npx wrangler secret put CF_ACCESS_TEAM_DOMAIN
 # The Application Audience (AUD) tag from your Access application that you copied in the step above
 npx wrangler secret put CF_ACCESS_AUD
 ```
+
+**Option B: Dashboard**
+
+Go to **Workers & Pages** → your worker → **Settings** → **Variables and Secrets** and add both `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD`. Secrets added through the dashboard take effect on the next request without redeployment.
 
 You can find your team domain in the [Zero Trust Dashboard](https://one.dash.cloudflare.com/) under **Settings** > **Custom Pages** (it's the subdomain before `.cloudflareaccess.com`).
 
@@ -462,6 +468,8 @@ OpenClaw in Cloudflare Sandbox uses multiple authentication layers:
 **Slow first request:** Cold starts take 1-2 minutes. Subsequent requests are faster.
 
 **R2 not mounting:** Check that all three R2 secrets are set (`R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `CF_ACCOUNT_ID`). Note: R2 mounting only works in production, not with `wrangler dev`.
+
+**Worker returns 503 "Configuration error":** The worker validates that `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, and an AI provider key are set. Add any missing secrets via `npx wrangler secret put <NAME>` or through the Cloudflare dashboard (**Workers & Pages** → your worker → **Settings** → **Variables and Secrets**). Secrets added through the dashboard take effect on the next request — no redeployment needed.
 
 **Access denied on admin routes:** Ensure `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` are set, and that your Cloudflare Access application is configured correctly.
 
