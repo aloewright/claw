@@ -2,8 +2,8 @@ import { Hono } from 'hono';
 import type { AppEnv } from '../types';
 import { createAccessMiddleware } from '../auth';
 import {
-  ensureMoltbotGateway,
-  findExistingMoltbotProcess,
+  ensureOpenClawGateway,
+  findExistingOpenClawProcess,
   syncToR2,
   waitForProcess,
 } from '../gateway';
@@ -32,12 +32,12 @@ adminApi.get('/devices', async (c) => {
   const sandbox = c.get('sandbox');
 
   try {
-    // Ensure moltbot is running first
-    await ensureMoltbotGateway(sandbox, c.env);
+    // Ensure openclaw is running first
+    await ensureOpenClawGateway(sandbox, c.env);
 
     // Run OpenClaw CLI to list devices
     // Must specify --url and --token (OpenClaw v2026.2.3 requires explicit credentials with --url)
-    const token = c.env.MOLTBOT_GATEWAY_TOKEN;
+    const token = c.env.OPENCLAW_GATEWAY_TOKEN;
     const tokenArg = token ? ` --token ${token}` : '';
     const proc = await sandbox.startProcess(
       `openclaw devices list --json --url ws://localhost:18789${tokenArg}`,
@@ -89,11 +89,11 @@ adminApi.post('/devices/:requestId/approve', async (c) => {
   }
 
   try {
-    // Ensure moltbot is running first
-    await ensureMoltbotGateway(sandbox, c.env);
+    // Ensure openclaw is running first
+    await ensureOpenClawGateway(sandbox, c.env);
 
     // Run OpenClaw CLI to approve the device
-    const token = c.env.MOLTBOT_GATEWAY_TOKEN;
+    const token = c.env.OPENCLAW_GATEWAY_TOKEN;
     const tokenArg = token ? ` --token ${token}` : '';
     const proc = await sandbox.startProcess(
       `openclaw devices approve ${requestId} --url ws://localhost:18789${tokenArg}`,
@@ -125,11 +125,11 @@ adminApi.post('/devices/approve-all', async (c) => {
   const sandbox = c.get('sandbox');
 
   try {
-    // Ensure moltbot is running first
-    await ensureMoltbotGateway(sandbox, c.env);
+    // Ensure openclaw is running first
+    await ensureOpenClawGateway(sandbox, c.env);
 
     // First, get the list of pending devices
-    const token = c.env.MOLTBOT_GATEWAY_TOKEN;
+    const token = c.env.OPENCLAW_GATEWAY_TOKEN;
     const tokenArg = token ? ` --token ${token}` : '';
     const listProc = await sandbox.startProcess(
       `openclaw devices list --json --url ws://localhost:18789${tokenArg}`,
@@ -263,7 +263,7 @@ adminApi.post('/gateway/restart', async (c) => {
 
   try {
     // Find and kill the existing gateway process
-    const existingProcess = await findExistingMoltbotProcess(sandbox);
+    const existingProcess = await findExistingOpenClawProcess(sandbox);
 
     if (existingProcess) {
       console.log('Killing existing gateway process:', existingProcess.id);
@@ -277,7 +277,7 @@ adminApi.post('/gateway/restart', async (c) => {
     }
 
     // Start a new gateway in the background
-    const bootPromise = ensureMoltbotGateway(sandbox, c.env).catch((err) => {
+    const bootPromise = ensureOpenClawGateway(sandbox, c.env).catch((err) => {
       console.error('Gateway restart failed:', err);
     });
     c.executionCtx.waitUntil(bootPromise);

@@ -1,5 +1,5 @@
 import type { Sandbox } from '@cloudflare/sandbox';
-import type { MoltbotEnv } from '../types';
+import type { OpenClawEnv } from '../types';
 import { getR2BucketName } from '../config';
 import { ensureRcloneConfig } from './r2';
 
@@ -13,7 +13,7 @@ export interface SyncResult {
 const RCLONE_FLAGS = '--transfers=16 --fast-list --s3-no-check-bucket';
 const LAST_SYNC_FILE = '/tmp/.last-sync';
 
-function rcloneRemote(env: MoltbotEnv, prefix: string): string {
+function rcloneRemote(env: OpenClawEnv, prefix: string): string {
   return `r2:${getR2BucketName(env)}/${prefix}`;
 }
 
@@ -35,7 +35,7 @@ async function detectConfigDir(sandbox: Sandbox): Promise<string | null> {
  * Sync OpenClaw config and workspace from container to R2 for persistence.
  * Uses rclone for direct S3 API access (no FUSE mount overhead).
  */
-export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncResult> {
+export async function syncToR2(sandbox: Sandbox, env: OpenClawEnv): Promise<SyncResult> {
   if (!(await ensureRcloneConfig(sandbox, env))) {
     return { success: false, error: 'R2 storage is not configured' };
   }

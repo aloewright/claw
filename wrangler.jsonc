@@ -32,7 +32,7 @@
   "build": {
     "command": "npm run build",
   },
-  // Container configuration for the Moltbot sandbox
+  // Container configuration for the OpenClaw sandbox
   "containers": [
     {
       "class_name": "Sandbox",
@@ -55,10 +55,10 @@
       "tag": "v1",
     },
   ],
-  // R2 bucket for persistent storage (moltbot data, conversations, etc.)
+  // R2 bucket for persistent storage (openclaw data, conversations, etc.)
   "r2_buckets": [
     {
-      "binding": "MOLTBOT_BUCKET",
+      "binding": "OPENCLAW_BUCKET",
       "bucket_name": "moltbot-data","preview_bucket_name": "moltbot-data",
     },
   ],
@@ -82,7 +82,7 @@
   //   - AI_GATEWAY_BASE_URL: Gateway endpoint URL
   //
   // Authentication:
-  // - MOLTBOT_GATEWAY_TOKEN: Token to protect gateway access
+  // - OPENCLAW_GATEWAY_TOKEN: Token to protect gateway access
   // - CF_ACCESS_TEAM_DOMAIN: Cloudflare Access team domain
   // - CF_ACCESS_AUD: Cloudflare Access application audience
   //

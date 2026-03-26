@@ -1,5 +1,5 @@
 import type { Sandbox } from '@cloudflare/sandbox';
-import type { MoltbotEnv } from '../types';
+import type { OpenClawEnv } from '../types';
 import { getR2BucketName } from '../config';
 
 const RCLONE_CONF_PATH = '/root/.config/rclone/rclone.conf';
@@ -11,7 +11,7 @@ const CONFIGURED_FLAG = '/tmp/.rclone-configured';
  *
  * @returns true if rclone is configured, false if credentials are missing
  */
-export async function ensureRcloneConfig(sandbox: Sandbox, env: MoltbotEnv): Promise<boolean> {
+export async function ensureRcloneConfig(sandbox: Sandbox, env: OpenClawEnv): Promise<boolean> {
   if (!env.R2_ACCESS_KEY_ID || !env.R2_SECRET_ACCESS_KEY || !env.CF_ACCOUNT_ID) {
     console.log(
       'R2 storage not configured (missing R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, or CF_ACCOUNT_ID)',
