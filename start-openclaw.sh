@@ -265,6 +265,14 @@ config.commands = config.commands || {};
 config.commands.mcp = true;
 config.commands.plugins = true;
 
+// MCP servers
+config.mcp = config.mcp || {};
+config.mcp.servers = config.mcp.servers || {};
+config.mcp.servers.portal = {
+    command: 'npx',
+    args: ['-y', 'mcp-remote@latest', 'https://aloesapps.com/mcp'],
+};
+
 fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 console.log('Configuration patched successfully');
 EOFPATCH
