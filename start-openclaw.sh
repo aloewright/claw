@@ -260,6 +260,11 @@ if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_APP_TOKEN) {
     };
 }
 
+// Enable /mcp and /plugins slash commands
+config.commands = config.commands || {};
+config.commands.mcp = true;
+config.commands.plugins = true;
+
 fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 console.log('Configuration patched successfully');
 EOFPATCH
