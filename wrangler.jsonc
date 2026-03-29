@@ -70,6 +70,7 @@
   // Application-level variables (non-secret, tied to this specific worker)
   "vars": {
     "CF_ACCESS_AUD": "33abff607ef9e709469582272d3173106e78b8f4557d274b821e254f3440b17f",
+    "CF_AI_GATEWAY_MODEL": "workers-ai/@cf/moonshotai/kimi-k2.5",
   },
   // Secrets Store bindings (account-level secrets)
   "secrets_store_secrets": [
