@@ -342,6 +342,10 @@ debug.get('/env', async (c) => {
   return c.json({
     has_anthropic_key: !!c.env.ANTHROPIC_API_KEY,
     has_openai_key: !!c.env.OPENAI_API_KEY,
+    has_cf_ai_gateway_api_key: !!c.env.CLOUDFLARE_AI_GATEWAY_API_KEY,
+    has_cf_ai_gateway_account_id: !!c.env.CF_AI_GATEWAY_ACCOUNT_ID,
+    has_cf_ai_gateway_gateway_id: !!c.env.CF_AI_GATEWAY_GATEWAY_ID,
+    cf_ai_gateway_model: c.env.CF_AI_GATEWAY_MODEL || null,
     has_gateway_token: !!c.env.OPENCLAW_GATEWAY_TOKEN,
     has_r2_access_key: !!c.env.R2_ACCESS_KEY_ID,
     has_r2_secret_key: !!c.env.R2_SECRET_ACCESS_KEY,
