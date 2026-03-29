@@ -121,6 +121,31 @@ const app = new Hono<AppEnv>();
 // MIDDLEWARE: Applied to ALL routes
 // =============================================================================
 
+// Middleware: Resolve Secrets Store bindings into plain strings
+// Secrets Store bindings are objects with a .get() method; regular secrets are strings.
+// This resolves them early so all downstream code can read env vars as plain strings.
+app.use('*', async (c, next) => {
+  const secretKeys = [
+    'CF_ACCESS_AUD',
+    'CF_ACCESS_TEAM_DOMAIN',
+    'CF_AI_GATEWAY_ACCOUNT_ID',
+    'CF_AI_GATEWAY_GATEWAY_ID',
+    'CLOUDFLARE_AI_GATEWAY_API_KEY',
+    'CF_ACCOUNT_ID',
+    'DEBUG_ROUTES',
+  ] as const;
+
+  await Promise.all(
+    secretKeys.map(async (key) => {
+      const val = (c.env as Record<string, unknown>)[key];
+      if (val && typeof val === 'object' && 'get' in val && typeof (val as { get: unknown }).get === 'function') {
+        (c.env as Record<string, unknown>)[key] = await (val as { get: () => Promise<string> }).get();
+      }
+    }),
+  );
+  await next();
+});
+
 // Middleware: Log every request
 app.use('*', async (c, next) => {
   const url = new URL(c.req.url);

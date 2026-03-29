@@ -67,6 +67,44 @@
   "browser": {
     "binding": "BROWSER",
   },
+  // Secrets Store bindings (account-level secrets)
+  "secrets_store_secrets": [
+    {
+      "binding": "CF_ACCESS_AUD",
+      "store_id": "e328ab1e3e624d24b1712d38aad51017",
+      "secret_name": "CF_ACCESS_AUD",
+    },
+    {
+      "binding": "CF_ACCESS_TEAM_DOMAIN",
+      "store_id": "e328ab1e3e624d24b1712d38aad51017",
+      "secret_name": "CF_ACCESS_TEAM_DOMAIN",
+    },
+    {
+      "binding": "CF_AI_GATEWAY_ACCOUNT_ID",
+      "store_id": "e328ab1e3e624d24b1712d38aad51017",
+      "secret_name": "CF_AI_GATEWAY_ACCOUNT_ID",
+    },
+    {
+      "binding": "CF_AI_GATEWAY_GATEWAY_ID",
+      "store_id": "e328ab1e3e624d24b1712d38aad51017",
+      "secret_name": "CF_AI_GATEWAY_GATEWAY_ID",
+    },
+    {
+      "binding": "CLOUDFLARE_AI_GATEWAY_API_KEY",
+      "store_id": "e328ab1e3e624d24b1712d38aad51017",
+      "secret_name": "CLOUDFLARE_AI_GATEWAY_API_KEY",
+    },
+    {
+      "binding": "CF_ACCOUNT_ID",
+      "store_id": "e328ab1e3e624d24b1712d38aad51017",
+      "secret_name": "CLOUDFLARE_ACCOUNT_ID",
+    },
+    {
+      "binding": "DEBUG_ROUTES",
+      "store_id": "e328ab1e3e624d24b1712d38aad51017",
+      "secret_name": "DEBUG_ROUTES",
+    },
+  ],
   // Note: CF_ACCOUNT_ID should be set via `wrangler secret put CF_ACCOUNT_ID`
   // Secrets to configure via `wrangler secret put`:
   //
