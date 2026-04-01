@@ -127,12 +127,16 @@ const app = new Hono<AppEnv>();
 app.use('*', async (c, next) => {
   const secretKeys = [
     'CF_ACCESS_TEAM_DOMAIN',
+    'CF_ACCESS_AUD',
     'CF_AI_GATEWAY_ACCOUNT_ID',
     'CF_AI_GATEWAY_GATEWAY_ID',
+    'CF_AI_GATEWAY_MODEL',
     'CLOUDFLARE_AI_GATEWAY_API_KEY',
     'CF_ACCOUNT_ID',
     'DEBUG_ROUTES',
     'OPENCLAW_GATEWAY_TOKEN',
+    'ANTHROPIC_API_KEY',
+    'OPENAI_API_KEY',
     'R2_ACCESS_KEY_ID',
     'R2_SECRET_ACCESS_KEY',
   ] as const;
@@ -462,8 +466,18 @@ app.all('*', async (c) => {
     });
   }
 
+  // Inject gateway token into HTTP request if not already present.
+  // CF Access redirects strip query params, so authenticated users lose ?token=.
+  // Since the user already passed CF Access auth, we inject the token server-side.
+  let httpRequest = request;
+  if (c.env.OPENCLAW_GATEWAY_TOKEN && !url.searchParams.has('token')) {
+    const tokenUrl = new URL(url.toString());
+    tokenUrl.searchParams.set('token', c.env.OPENCLAW_GATEWAY_TOKEN);
+    httpRequest = new Request(tokenUrl.toString(), request);
+  }
+
   console.log('[HTTP] Proxying:', url.pathname + url.search);
-  const httpResponse = await sandbox.containerFetch(request, OPENCLAW_PORT);
+  const httpResponse = await sandbox.containerFetch(httpRequest, OPENCLAW_PORT);
   console.log('[HTTP] Response status:', httpResponse.status);
 
   // Add debug header to verify worker handled the request
