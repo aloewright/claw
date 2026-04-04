@@ -17,11 +17,17 @@ const API_COST_PER_INPUT_TOKEN = 3 / 1_000_000;
 const API_COST_PER_OUTPUT_TOKEN = 15 / 1_000_000;
 const CLI_TOOLS = new Set(['claude', 'codex', 'gemini']);
 
+function shellEscapeArg(arg: string): string {
+  // Wrap in single quotes and escape existing single quotes in a POSIX-safe way.
+  // This avoids relying on fragile manual backslash-escaping with double quotes.
+  return `'${arg.replace(/'/g, `'\\''`)}'`;
+}
+
 export function buildCliCommand(tool: string, prompt: string, config: Partial<CliConfig>): string {
-  const escapedPrompt = prompt.replace(/"/g, '\\"');
-  const args = config.args?.join(' ') ?? '';
-  const argsPart = args ? `${args} ` : '';
-  return `${tool} ${argsPart}-p "${escapedPrompt}"`;
+  const escapedPrompt = shellEscapeArg(prompt);
+  const escapedArgs = (config.args ?? []).map(shellEscapeArg).join(' ');
+  const argsPart = escapedArgs ? `${escapedArgs} ` : '';
+  return `${tool} ${argsPart}-p ${escapedPrompt}`;
 }
 
 export function parseCliOutput(stdout: string, stderr: string): CliOutput {
