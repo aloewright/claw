@@ -1,0 +1,46 @@
+setup:
+  project: claw
+  config: dev
+
+# Doppler configuration for Claw (OpenClaw)
+# Install: brew install dopplerhq/cli/doppler
+# Setup:   doppler setup
+#
+# Usage:
+#   npm run start:doppler          # local dev with Doppler secrets injected
+#   npm run deploy:doppler         # deploy with Doppler secrets as env vars
+#   npm run secrets:sync           # push Doppler secrets to Cloudflare Worker secrets
+#   npm run secrets:sync -- --config prd  # sync production config
+#
+# Secrets to configure in Doppler dashboard:
+#
+# [Required]
+# ANTHROPIC_API_KEY            - Anthropic API key
+# OPENCLAW_GATEWAY_TOKEN       - Gateway access token (openssl rand -hex 32)
+#
+# [Cloudflare AI Gateway (alternative to direct API keys)]
+# CLOUDFLARE_AI_GATEWAY_API_KEY
+# CF_AI_GATEWAY_ACCOUNT_ID
+# CF_AI_GATEWAY_GATEWAY_ID
+#
+# [Authentication]
+# CF_ACCESS_TEAM_DOMAIN        - Cloudflare Access team domain
+# CF_ACCESS_AUD                - Cloudflare Access audience tag
+#
+# [AI Providers for swarm agents]
+# OPENAI_API_KEY               - OpenAI/Codex API key (swarm fallback)
+#
+# [R2 Persistence]
+# R2_ACCESS_KEY_ID             - R2 API token key ID
+# R2_SECRET_ACCESS_KEY         - R2 API token secret
+# CF_ACCOUNT_ID                - Cloudflare account ID (for R2 endpoint)
+#
+# [Optional]
+# CDP_SECRET                   - CDP endpoint authentication secret
+# WORKER_URL                   - Public worker URL
+# TELEGRAM_BOT_TOKEN           - Telegram integration
+# DISCORD_BOT_TOKEN            - Discord integration
+# SLACK_BOT_TOKEN              - Slack integration
+# SLACK_APP_TOKEN              - Slack app token
+#
+# Environments: dev, stg, prd
