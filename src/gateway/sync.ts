@@ -76,6 +76,12 @@ export async function syncToR2(sandbox: Sandbox, env: OpenClawEnv): Promise<Sync
     { timeout: 120000 },
   );
 
+  // Sync Tailscale state (non-fatal, preserves auth across restarts)
+  await sandbox.exec(
+    `test -d /var/lib/tailscale && rclone sync /var/lib/tailscale/ ${remote('tailscale/')} ${RCLONE_FLAGS} --exclude='*.log' || true`,
+    { timeout: 120000 },
+  );
+
   // Write timestamp
   await sandbox.exec(`date -Iseconds > ${LAST_SYNC_FILE}`);
   const tsResult = await sandbox.exec(`cat ${LAST_SYNC_FILE}`);

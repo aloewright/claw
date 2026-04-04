@@ -50,6 +50,7 @@ describe('syncToR2', () => {
         .mockResolvedValueOnce(createMockExecResult()) // rclone sync config
         .mockResolvedValueOnce(createMockExecResult()) // rclone sync workspace
         .mockResolvedValueOnce(createMockExecResult()) // rclone sync skills
+        .mockResolvedValueOnce(createMockExecResult()) // rclone sync tailscale
         .mockResolvedValueOnce(createMockExecResult()) // date > last-sync
         .mockResolvedValueOnce(createMockExecResult(timestamp)); // cat last-sync
 
@@ -69,6 +70,7 @@ describe('syncToR2', () => {
         .mockResolvedValueOnce(createMockExecResult()) // rclone sync config
         .mockResolvedValueOnce(createMockExecResult()) // rclone sync workspace
         .mockResolvedValueOnce(createMockExecResult()) // rclone sync skills
+        .mockResolvedValueOnce(createMockExecResult()) // rclone sync tailscale
         .mockResolvedValueOnce(createMockExecResult()) // date > last-sync
         .mockResolvedValueOnce(createMockExecResult(timestamp)); // cat last-sync
 
@@ -103,11 +105,12 @@ describe('syncToR2', () => {
       execMock
         .mockResolvedValueOnce(createMockExecResult('yes'))
         .mockResolvedValueOnce(createMockExecResult('openclaw'))
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult('2026-01-27'));
+        .mockResolvedValueOnce(createMockExecResult()) // config
+        .mockResolvedValueOnce(createMockExecResult()) // workspace
+        .mockResolvedValueOnce(createMockExecResult()) // skills
+        .mockResolvedValueOnce(createMockExecResult()) // tailscale
+        .mockResolvedValueOnce(createMockExecResult()) // date
+        .mockResolvedValueOnce(createMockExecResult('2026-01-27')); // cat
 
       const env = createMockEnvWithR2();
       await syncToR2(sandbox, env);
@@ -121,11 +124,12 @@ describe('syncToR2', () => {
       execMock
         .mockResolvedValueOnce(createMockExecResult('yes'))
         .mockResolvedValueOnce(createMockExecResult('openclaw'))
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult('2026-01-27'));
+        .mockResolvedValueOnce(createMockExecResult()) // config
+        .mockResolvedValueOnce(createMockExecResult()) // workspace
+        .mockResolvedValueOnce(createMockExecResult()) // skills
+        .mockResolvedValueOnce(createMockExecResult()) // tailscale
+        .mockResolvedValueOnce(createMockExecResult()) // date
+        .mockResolvedValueOnce(createMockExecResult('2026-01-27')); // cat
 
       const env = createMockEnvWithR2();
       await syncToR2(sandbox, env);
@@ -142,11 +146,12 @@ describe('syncToR2', () => {
       execMock
         .mockResolvedValueOnce(createMockExecResult('yes'))
         .mockResolvedValueOnce(createMockExecResult('openclaw'))
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult())
-        .mockResolvedValueOnce(createMockExecResult('2026-01-27'));
+        .mockResolvedValueOnce(createMockExecResult()) // config
+        .mockResolvedValueOnce(createMockExecResult()) // workspace
+        .mockResolvedValueOnce(createMockExecResult()) // skills
+        .mockResolvedValueOnce(createMockExecResult()) // tailscale
+        .mockResolvedValueOnce(createMockExecResult()) // date
+        .mockResolvedValueOnce(createMockExecResult('2026-01-27')); // cat
 
       const env = createMockEnvWithR2({ R2_BUCKET_NAME: 'my-custom-bucket' });
       await syncToR2(sandbox, env);

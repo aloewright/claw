@@ -94,6 +94,15 @@ if r2_configured; then
         rclone copy "r2:${R2_BUCKET}/skills/" "$SKILLS_DIR/" $RCLONE_FLAGS -v 2>&1 || echo "WARNING: skills restore failed with exit code $?"
         echo "Skills restored"
     fi
+
+    # Restore Tailscale state (so we don't need to re-authenticate on every restart)
+    REMOTE_TS_COUNT=$(rclone ls "r2:${R2_BUCKET}/tailscale/" $RCLONE_FLAGS 2>/dev/null | wc -l)
+    if [ "$REMOTE_TS_COUNT" -gt 0 ]; then
+        echo "Restoring Tailscale state from R2 ($REMOTE_TS_COUNT files)..."
+        mkdir -p /var/lib/tailscale
+        rclone copy "r2:${R2_BUCKET}/tailscale/" /var/lib/tailscale/ $RCLONE_FLAGS -v 2>&1 || echo "WARNING: Tailscale state restore failed with exit code $?"
+        echo "Tailscale state restored"
+    fi
 else
     echo "R2 not configured, starting fresh"
 fi
@@ -319,6 +328,7 @@ if r2_configured; then
                     -not -path '*/node_modules/*' \
                     -not -path '*/.git/*' \
                     -type f -printf '%P\n' 2>/dev/null
+                find /var/lib/tailscale -newer "$MARKER" -type f -printf 'ts:%P\n' 2>/dev/null
             } > "$CHANGED"
 
             COUNT=$(wc -l < "$CHANGED" 2>/dev/null || echo 0)
@@ -334,6 +344,10 @@ if r2_configured; then
                 if [ -d "$SKILLS_DIR" ]; then
                     rclone sync "$SKILLS_DIR/" "r2:${R2_BUCKET}/skills/" \
                         $RCLONE_FLAGS 2>> "$LOGFILE"
+                fi
+                if [ -d /var/lib/tailscale ]; then
+                    rclone sync /var/lib/tailscale/ "r2:${R2_BUCKET}/tailscale/" \
+                        $RCLONE_FLAGS --exclude='*.log' 2>> "$LOGFILE"
                 fi
                 date -Iseconds > "$LAST_SYNC_FILE"
                 touch "$MARKER"
