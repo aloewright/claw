@@ -20,6 +20,19 @@ export class HybridMemory {
     return `${PREFIX}:${agentId}:${entryKey}`;
   }
 
+  private async getPageEntries(names: string[]): Promise<(MemoryEntry | null)[]> {
+    const raws = await Promise.all(names.map((name) => this.kv.get(name)));
+    return raws.map((raw, i) => {
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw) as MemoryEntry;
+      } catch {
+        console.warn(`[swarm-memory] Skipping corrupted entry: ${names[i]}`);
+        return null;
+      }
+    });
+  }
+
   async store(agentId: string, entryKey: string, value: string, withEmbedding = false): Promise<void> {
     const entry: MemoryEntry = { key: entryKey, value, agentId, timestamp: Date.now() };
     if (withEmbedding) {
@@ -40,13 +53,10 @@ export class HybridMemory {
     const entries: MemoryEntry[] = [];
     let cursor: string | undefined;
 
-    // Paginate through all keys
     do {
       const result = await this.kv.list({ prefix, cursor });
-      for (const { name } of result.keys) {
-        const raw = await this.kv.get(name);
-        if (raw) entries.push(JSON.parse(raw) as MemoryEntry);
-      }
+      const page = await this.getPageEntries(result.keys.map((k) => k.name));
+      entries.push(...page.filter((e): e is MemoryEntry => e !== null));
       cursor = result.list_complete ? undefined : result.cursor;
     } while (cursor);
 
@@ -64,14 +74,11 @@ export class HybridMemory {
     const scored: Array<{ entry: MemoryEntry; score: number }> = [];
     let cursor: string | undefined;
 
-    // Paginate through all keys
     do {
       const result = await this.kv.list({ prefix, cursor });
-      for (const { name } of result.keys) {
-        const raw = await this.kv.get(name);
-        if (!raw) continue;
-        const entry = JSON.parse(raw) as MemoryEntry;
-        if (!entry.embedding) continue;
+      const page = await this.getPageEntries(result.keys.map((k) => k.name));
+      for (const entry of page) {
+        if (!entry?.embedding) continue;
         const score = cosineSimilarity(queryEmbedding, entry.embedding);
         scored.push({ entry, score });
       }

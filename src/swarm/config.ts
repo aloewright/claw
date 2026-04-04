@@ -1,4 +1,6 @@
-import type { SwarmAgentDefinition, ValidationResult } from './types';
+import type { SwarmAgentDefinition, ModelConfig, ValidationResult } from './types';
+
+export type AgentInput = Partial<SwarmAgentDefinition> & { name: string; model: ModelConfig };
 
 export function validateSwarmAgent(input: Record<string, unknown>): ValidationResult {
   const errors: string[] = [];
@@ -7,7 +9,7 @@ export function validateSwarmAgent(input: Record<string, unknown>): ValidationRe
   return { valid: errors.length === 0, errors };
 }
 
-export function buildAgentsConfig(agents: SwarmAgentDefinition[]): SwarmAgentDefinition[] {
+export function buildAgentsConfig(agents: AgentInput[]): SwarmAgentDefinition[] {
   return agents.map((agent) => {
     const result = validateSwarmAgent(agent as unknown as Record<string, unknown>);
     if (!result.valid) {

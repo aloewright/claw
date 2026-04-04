@@ -4,12 +4,23 @@ import { HybridMemory } from './memory';
 function mockKV() {
   const store = new Map<string, string>();
   return {
+    store, // exposed for direct manipulation in tests
     get: vi.fn(async (key: string) => store.get(key) ?? null),
     put: vi.fn(async (key: string, value: string) => { store.set(key, value); }),
     delete: vi.fn(async (key: string) => { store.delete(key); }),
-    list: vi.fn(async ({ prefix }: { prefix: string }) => {
-      const keys = Array.from(store.keys()).filter((k) => k.startsWith(prefix)).map((name) => ({ name }));
-      return { keys };
+    list: vi.fn(async ({ prefix, cursor }: { prefix: string; cursor?: string }) => {
+      const allKeys = Array.from(store.keys()).filter((k) => k.startsWith(prefix)).map((name) => ({ name }));
+      // Simulate pagination: 2 keys per page
+      const PAGE_SIZE = 2;
+      const startIdx = cursor ? parseInt(cursor, 10) : 0;
+      const pageKeys = allKeys.slice(startIdx, startIdx + PAGE_SIZE);
+      const nextIdx = startIdx + PAGE_SIZE;
+      const list_complete = nextIdx >= allKeys.length;
+      return {
+        keys: pageKeys,
+        list_complete,
+        cursor: list_complete ? undefined : String(nextIdx),
+      };
     }),
   };
 }
@@ -56,5 +67,34 @@ describe('HybridMemory', () => {
     await memory.delete('agent-1', 'temp');
     const result = await memory.get('agent-1', 'temp');
     expect(result).toBeNull();
+  });
+
+  it('paginates through all entries when list exceeds page size', async () => {
+    await memory.store('agent-1', 'a', 'val-a');
+    await memory.store('agent-1', 'b', 'val-b');
+    await memory.store('agent-1', 'c', 'val-c');
+    // Page size is 2, so this requires 2 pages
+    const entries = await memory.list('agent-1');
+    expect(entries).toHaveLength(3);
+    const values = entries.map((e) => e.value).sort();
+    expect(values).toEqual(['val-a', 'val-b', 'val-c']);
+  });
+
+  it('skips corrupted JSON entries without throwing', async () => {
+    await memory.store('agent-1', 'good', 'valid data');
+    // Inject corrupted JSON directly into the KV store
+    kv.store.set('swarm:agent-1:bad', '{not valid json!!!');
+    const entries = await memory.list('agent-1');
+    // Should return only the valid entry, skip the corrupted one
+    expect(entries).toHaveLength(1);
+    expect(entries[0].value).toBe('valid data');
+  });
+
+  it('search skips corrupted entries and returns valid results', async () => {
+    await memory.store('agent-1', 'good', 'semantic data', true);
+    kv.store.set('swarm:agent-1:corrupt', '{broken json');
+    const results = await memory.search('semantic data', 'agent-1');
+    expect(results).toHaveLength(1);
+    expect(results[0].value).toBe('semantic data');
   });
 });

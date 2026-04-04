@@ -69,8 +69,10 @@ export class CostAwareRouter {
       const fallbackModel = request.model.fallbacks?.find((f) => f.startsWith('cf-ai-gw-'));
       if (fallbackModel) {
         // Parse fallback model string (e.g., "cf-ai-gw-anthropic/claude-sonnet-4-5")
-        const [providerPart, ...modelParts] = fallbackModel.replace('cf-ai-gw-', '').split('/');
-        const modelId = modelParts.join('/');
+        const afterPrefix = fallbackModel.replace('cf-ai-gw-', '');
+        const slashIdx = afterPrefix.indexOf('/');
+        const providerPart = slashIdx >= 0 ? afterPrefix.substring(0, slashIdx) : afterPrefix;
+        const modelId = slashIdx >= 0 ? afterPrefix.substring(slashIdx + 1) : providerPart;
 
         const messages: Array<{ role: string; content: string }> = [];
         if (request.systemPrompt) messages.push({ role: 'system', content: request.systemPrompt });
@@ -83,9 +85,26 @@ export class CostAwareRouter {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: modelId, messages, max_tokens: 8192 }),
         });
-        const body = await response.json() as { choices?: Array<{ message: { content: string } }> };
+
+        if (!response.ok) {
+          let errorMsg = `${response.status} ${response.statusText}`;
+          try {
+            const errBody = await response.json() as { error?: { message?: string } };
+            if (errBody.error?.message) errorMsg = errBody.error.message;
+          } catch {
+            // response wasn't JSON — use status text
+          }
+          throw new Error(`AI Gateway error (${providerPart}): ${errorMsg}`);
+        }
+
+        let body: { choices?: Array<{ message: { content: string } }> };
+        try {
+          body = await response.json() as typeof body;
+        } catch {
+          throw new Error(`AI Gateway returned invalid JSON (${providerPart})`);
+        }
         const content = body.choices?.[0]?.message?.content ?? '';
-        return { content, source: 'gateway', costSaved: 0, durationMs: Date.now() - start };
+        return { content, source: 'gateway' as const, costSaved: 0, durationMs: Date.now() - start };
       }
     }
 
