@@ -224,12 +224,25 @@ publicRoutes.post('/auth/sign-up', async (c) => {
       body: JSON.stringify({ name, email, password }),
     });
 
+    const signUpBody = await signUpResp.text();
+    let signUpData: Record<string, unknown> = {};
+    try { signUpData = JSON.parse(signUpBody); } catch { /* not JSON */ }
+
     if (!signUpResp.ok) {
-      const err = (await signUpResp.json().catch(() => ({}))) as { message?: string };
-      return c.html(LOGIN_PAGE(err.message || 'Sign up failed.', next, 'signup'), 400);
+      // better-auth returns errors as { message }, { error }, or { error: { message } }
+      const msg =
+        (signUpData as { message?: string }).message ||
+        (typeof signUpData.error === 'string' ? signUpData.error : null) ||
+        ((signUpData.error as { message?: string })?.message) ||
+        `Sign up failed (${signUpResp.status}): ${signUpBody.slice(0, 200)}`;
+      return c.html(LOGIN_PAGE(msg, next, 'signup'), 400);
     }
 
-    // Sign in immediately after sign-up
+    // If email verification is required, the sign-up succeeds but no session is returned.
+    // The user needs to verify their email before signing in.
+    const signUpToken = (signUpData as { token?: string }).token;
+
+    // Try to sign in immediately (works when email verification is not required)
     const signInResp = await c.env.AUTH_SERVICE!.fetch('http://internal/api/auth/sign-in/email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -237,13 +250,14 @@ publicRoutes.post('/auth/sign-up', async (c) => {
     });
 
     if (!signInResp.ok) {
-      // Account created but sign-in failed — redirect to sign-in page
-      return c.html(LOGIN_PAGE('Account created. Please sign in.', next, 'signin'));
+      // Account created but sign-in failed — likely needs email verification
+      return c.html(LOGIN_PAGE('Account created! Check your email to verify, then sign in.', next, 'signin'));
     }
 
-    const data = (await signInResp.json()) as { token?: string };
-    if (!data.token) {
-      return c.html(LOGIN_PAGE('Account created. Please sign in.', next, 'signin'));
+    const signInData = (await signInResp.json()) as { token?: string };
+    const token = signInData.token || signUpToken;
+    if (!token) {
+      return c.html(LOGIN_PAGE('Account created! Check your email to verify, then sign in.', next, 'signin'));
     }
 
     const isSecure = new URL(c.req.url).protocol === 'https:';
