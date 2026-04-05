@@ -15,19 +15,19 @@
 ```
 src/
 ├── swarm/
-│   ├─�� terminal.ts               # NEW: WebSocket terminal relay for sandbox processes
-│   ├── terminal.test.ts           # NEW: Terminal relay tests
-���   ├── domain/                    # NEW: V3 DDD entities and value objects
-│   │   ├── agent.entity.ts        # Agent entity with lifecycle
-│   │   ├── agent-status.vo.ts     # Status value object
-│   │   └── swarm-event.ts         # Domain events
-│   ├── index.ts                   # UPDATE: export new modules
+│   ├── terminal.ts               # NEW: WebSocket terminal relay for sandbox processes
+│   ├── terminal.test.ts          # NEW: Terminal relay tests
+│   ├── domain/                   # NEW: V3 DDD entities and value objects
+│   │   ├── agent.entity.ts       # Agent entity with lifecycle
+│   │   ├── agent-status.vo.ts    # Status value object
+│   │   └── swarm-event.ts        # Domain events
+│   ├── index.ts                  # UPDATE: export new modules
 ├── routes/
-│   └── swarm.ts                   # UPDATE: add terminal WebSocket endpoint
+│   └── swarm.ts                  # UPDATE: add terminal WebSocket endpoint
 ├── client/
 │   └── pages/
-│       └── TerminalPage.tsx       # NEW: xterm.js terminal component
-│       └── TerminalPage.css       # NEW: terminal styles
+│       └── TerminalPage.tsx      # NEW: xterm.js terminal component
+│       └── TerminalPage.css      # NEW: terminal styles
 ```
 
 **Modified files:**
