@@ -1,0 +1,31 @@
+gateway:
+  - changed-files:
+      - any-glob-to-any-file: ["src/gateway/**"]
+
+auth:
+  - changed-files:
+      - any-glob-to-any-file: ["src/auth/**"]
+
+client:
+  - changed-files:
+      - any-glob-to-any-file: ["src/client/**"]
+
+routes:
+  - changed-files:
+      - any-glob-to-any-file: ["src/routes/**"]
+
+swarm:
+  - changed-files:
+      - any-glob-to-any-file: ["src/swarm/**"]
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: [".github/workflows/**"]
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file: ["package.json", "package-lock.json"]
+
+configuration:
+  - changed-files:
+      - any-glob-to-any-file: ["wrangler.jsonc", "tsconfig*.json", "*.config.*"]
