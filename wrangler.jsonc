@@ -133,6 +133,11 @@
       "store_id": "e328ab1e3e624d24b1712d38aad51017",
       "secret_name": "DEBUG_ROUTES",
     },
+    {
+      "binding": "CLAW_MESSENGER_API_KEY",
+      "store_id": "e328ab1e3e624d24b1712d38aad51017",
+      "secret_name": "CLAW_MESSENGER_API_KEY",
+    },
   ],
   // Note: CF_ACCOUNT_ID should be set via `wrangler secret put CF_ACCOUNT_ID`
   // Secrets to configure via `wrangler secret put`:
