@@ -153,16 +153,6 @@ publicRoutes.post('/auth/sign-in', async (c) => {
     return c.html(LOGIN_PAGE('Email and password are required.', next), 400);
   }
 
-  // ... authentication logic ...
-
-  if (!token) {
-    return c.html(LOGIN_PAGE(authError || 'Sign in failed.', next), 401);
-  }
-
-  if (!email || !password) {
-    return c.html(LOGIN_PAGE('Email and password are required.'), 400);
-  }
-
   let token: string | undefined;
   let authError: string | undefined;
 
@@ -185,7 +175,7 @@ publicRoutes.post('/auth/sign-in', async (c) => {
   }
 
   if (!token) {
-    return c.html(LOGIN_PAGE(authError || 'Sign in failed.'), 401);
+    return c.html(LOGIN_PAGE(authError || 'Sign in failed.', next), 401);
   }
 
   // Set HttpOnly session cookie on claw's domain
