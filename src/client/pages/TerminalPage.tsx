@@ -26,7 +26,7 @@ export default function TerminalPage({ onBack }: TerminalPageProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tool, workspace: '/root/clawd' }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { sessionId?: string };
       if (data.sessionId) {
         setSessionId(data.sessionId);
         connectWebSocket(data.sessionId, token);

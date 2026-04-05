@@ -2,6 +2,50 @@ import type { Context, Next } from 'hono';
 import type { AppEnv, OpenClawEnv } from '../types';
 import { verifyAccessJWT } from './jwt';
 
+// ---------------------------------------------------------------------------
+// Better-auth / AUTH_SERVICE mode
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true when the AUTH_SERVICE binding is available.
+ * In this mode, CF Access is not required — sessions are validated via
+ * the cloudos-auth better-auth worker.
+ */
+export function isAuthServiceMode(env: OpenClawEnv): boolean {
+  return !!env.AUTH_SERVICE;
+}
+
+/**
+ * Validate a request against the cloudos-auth worker.
+ * Expects a `claw_session` HttpOnly cookie whose value is the better-auth
+ * session token (set at login via /auth/sign-in).
+ *
+ * Returns the authenticated user or null if the session is missing/invalid.
+ */
+export async function validateWithAuthService(
+  cookieHeader: string | null,
+  authService: Fetcher,
+): Promise<{ email: string; name?: string } | null> {
+  if (!cookieHeader) return null;
+
+  const match = cookieHeader.split(';').find((c) => c.trim().startsWith('claw_session='));
+  if (!match) return null;
+  const token = match.split('=').slice(1).join('=').trim();
+  if (!token) return null;
+
+  try {
+    const resp = await authService.fetch('http://internal/api/auth/get-session', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) return null;
+    const data = (await resp.json()) as { user?: { email: string; name?: string } };
+    if (!data?.user?.email) return null;
+    return { email: data.user.email, name: data.user.name };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Options for creating an access middleware
  */
@@ -54,6 +98,24 @@ export function createAccessMiddleware(options: AccessMiddlewareOptions) {
     if (isDevMode(c.env) || isE2ETestMode(c.env)) {
       c.set('accessUser', { email: 'dev@localhost', name: 'Dev User' });
       return next();
+    }
+
+    // Better-auth mode: validate via cloudos-auth service binding
+    if (isAuthServiceMode(c.env)) {
+      const user = await validateWithAuthService(
+        c.req.header('Cookie') ?? null,
+        c.env.AUTH_SERVICE!,
+      );
+      if (user) {
+        c.set('accessUser', user);
+        return next();
+      }
+      // Not authenticated — redirect to login for HTML, 401 for API
+      if (type === 'html') {
+        const url = new URL(c.req.url);
+        return c.redirect(`/login?next=${encodeURIComponent(url.pathname + url.search)}`);
+      }
+      return c.json({ error: 'Unauthorized', hint: 'Please log in at /login' }, 401);
     }
 
     const teamDomain = c.env.CF_ACCESS_TEAM_DOMAIN;

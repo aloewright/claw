@@ -42,6 +42,10 @@ export interface OpenClawEnv {
   BROWSER?: Fetcher;
   CDP_SECRET?: string; // Shared secret for CDP endpoint authentication
   WORKER_URL?: string; // Public URL of the worker (for CDP endpoint)
+  // better-auth service binding (cloudos-auth worker)
+  AUTH_SERVICE?: Fetcher;
+  // Set to 'true' to auto-approve pending device pairing requests on gateway startup
+  AUTO_APPROVE_DEVICES?: string;
   // Workers AI + KV for swarm agent memory
   AI?: { run: (model: string, input: unknown) => Promise<unknown> };
   SWARM_KV?: KVNamespace;

@@ -63,6 +63,14 @@
     },
   ],
 
+  // Service binding to cloudos-auth worker for better-auth session validation
+  "services": [
+    {
+      "binding": "AUTH_SERVICE",
+      "service": "cloudos-auth",
+    },
+  ],
+
   // Browser Rendering binding for CDP shim
   "browser": {
     "binding": "BROWSER",

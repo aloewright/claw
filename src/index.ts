@@ -57,13 +57,15 @@ export { Sandbox };
 function validateRequiredEnv(env: OpenClawEnv): string[] {
   const missing: string[] = [];
   const isTestMode = env.DEV_MODE === 'true' || env.E2E_TEST_MODE === 'true';
+  // AUTH_SERVICE binding replaces CF Access — no Access vars needed
+  const hasAuthService = !!env.AUTH_SERVICE;
 
   if (!env.OPENCLAW_GATEWAY_TOKEN) {
     missing.push('OPENCLAW_GATEWAY_TOKEN');
   }
 
-  // CF Access vars not required in dev/test mode since auth is skipped
-  if (!isTestMode) {
+  // CF Access vars only required when NOT using auth service binding or dev/test mode
+  if (!isTestMode && !hasAuthService) {
     if (!env.CF_ACCESS_TEAM_DOMAIN) {
       missing.push('CF_ACCESS_TEAM_DOMAIN');
     }
@@ -144,9 +146,9 @@ app.use('*', async (c, next) => {
 
   await Promise.all(
     secretKeys.map(async (key) => {
-      const val = (c.env as Record<string, unknown>)[key];
+      const val = (c.env as unknown as Record<string, unknown>)[key];
       if (val && typeof val === 'object' && 'get' in val && typeof (val as { get: unknown }).get === 'function') {
-        (c.env as Record<string, unknown>)[key] = await (val as { get: () => Promise<string> }).get();
+        (c.env as unknown as Record<string, unknown>)[key] = await (val as { get: () => Promise<string> }).get();
       }
     }),
   );

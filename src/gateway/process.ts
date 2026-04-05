@@ -3,6 +3,64 @@ import type { OpenClawEnv } from '../types';
 import { OPENCLAW_PORT, STARTUP_TIMEOUT_MS } from '../config';
 import { buildEnvVars } from './env';
 import { ensureRcloneConfig } from './r2';
+import { waitForProcess } from './utils';
+
+// ---------------------------------------------------------------------------
+// Restart rate-limiting (module-level, per Worker isolate)
+// ---------------------------------------------------------------------------
+const RESTART_COOLDOWN_MS = 30_000; // 30 s between restart attempts
+const lastRestartAttempt: Map<string, number> = new Map();
+
+function isRestartCoolingDown(key: string): boolean {
+  const last = lastRestartAttempt.get(key);
+  return last !== undefined && Date.now() - last < RESTART_COOLDOWN_MS;
+}
+
+function recordRestartAttempt(key: string): void {
+  lastRestartAttempt.set(key, Date.now());
+}
+
+// ---------------------------------------------------------------------------
+// Auto-approve device pairing
+// ---------------------------------------------------------------------------
+
+/**
+ * Attempt to auto-approve any pending device pairing requests.
+ * Runs in the background after gateway startup when AUTO_APPROVE_DEVICES=true.
+ */
+export async function autoApproveDevices(sandbox: Sandbox, token?: string): Promise<void> {
+  const tokenArg = token ? ` --token ${token}` : '';
+
+  // List pending devices
+  let pending: Array<{ requestId: string }> = [];
+  try {
+    const listProc = await sandbox.startProcess(
+      `openclaw devices list --json --url ws://localhost:${OPENCLAW_PORT}${tokenArg}`,
+    );
+    await waitForProcess(listProc, 20_000);
+    const logs = await listProc.getLogs();
+    const jsonMatch = (logs.stdout ?? '').match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const data = JSON.parse(jsonMatch[0]) as { pending?: Array<{ requestId: string }> };
+      pending = data.pending ?? [];
+    }
+  } catch {
+    return; // Non-fatal — don't throw
+  }
+
+  for (const device of pending) {
+    try {
+      const approveProc = await sandbox.startProcess(
+        `openclaw devices approve ${device.requestId} --url ws://localhost:${OPENCLAW_PORT}${tokenArg}`,
+      );
+      // eslint-disable-next-line no-await-in-loop
+      await waitForProcess(approveProc, 20_000);
+      console.log('[auto-approve] Approved device:', device.requestId);
+    } catch (err) {
+      console.warn('[auto-approve] Failed to approve device:', device.requestId, err);
+    }
+  }
+}
 
 /**
  * Find an existing OpenClaw gateway process
@@ -78,7 +136,14 @@ export async function ensureOpenClawGateway(sandbox: Sandbox, env: OpenClawEnv):
       return existingProcess;
       // eslint-disable-next-line no-unused-vars
     } catch (_e) {
-      // Timeout waiting for port - process is likely dead or stuck, kill and restart
+      // Timeout waiting for port - process is likely dead or stuck.
+      // Apply restart cooldown to prevent concurrent requests from all trying to restart.
+      const cooldownKey = 'gateway-restart';
+      if (isRestartCoolingDown(cooldownKey)) {
+        console.log('Restart cooldown active — skipping kill/restart, will retry on next request');
+        throw new Error('Gateway is unresponsive and restart cooldown is active. Please try again shortly.');
+      }
+      recordRestartAttempt(cooldownKey);
       console.log('Existing process not reachable after full timeout, killing and restarting...');
       try {
         await existingProcess.kill();
@@ -133,6 +198,13 @@ export async function ensureOpenClawGateway(sandbox: Sandbox, env: OpenClawEnv):
 
   // Verify gateway is actually responding
   console.log('[Gateway] Verifying gateway health...');
+
+  // Auto-approve any pending device pairing requests (non-blocking)
+  if (env.AUTO_APPROVE_DEVICES === 'true') {
+    autoApproveDevices(sandbox, env.OPENCLAW_GATEWAY_TOKEN).catch((err) => {
+      console.warn('[Gateway] Auto-approve devices failed (non-fatal):', err);
+    });
+  }
 
   return process;
 }
