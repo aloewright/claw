@@ -22,9 +22,8 @@ Task("Security testing", "Implement TDD London School security framework", "test
 
 ### CVE-1: Vulnerable Dependencies
 ```bash
-npm update @anthropic-ai/claude-code@^2.0.31
+npm install `@anthropic-ai/claude-code`@^2.0.31
 npm audit --audit-level high
-```
 
 ### CVE-2: Weak Password Hashing
 ```typescript
