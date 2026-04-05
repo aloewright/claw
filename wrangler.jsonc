@@ -12,7 +12,7 @@
   // Custom domain routing
   "routes": [
     {
-      "pattern": "now.makethe.app",
+      "pattern": "agent.pdx.software",
       "custom_domain": true,
     },
   ],
