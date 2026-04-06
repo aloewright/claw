@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { isDevMode, isE2ETestMode, extractJWT } from './middleware';
+import { isDevMode, isE2ETestMode, extractJWT, validateWithAuthService, isAuthServiceMode } from './middleware';
 import type { OpenClawEnv } from '../types';
 import type { Context } from 'hono';
 import type { AppEnv } from '../types';
@@ -122,6 +122,68 @@ describe('extractJWT', () => {
   });
 });
 
+describe('isAuthServiceMode', () => {
+  it('returns true when AUTH_SERVICE is set', () => {
+    const mockFetcher = { fetch: vi.fn() } as unknown as Fetcher;
+    const env = createMockEnv({ AUTH_SERVICE: mockFetcher });
+    expect(isAuthServiceMode(env)).toBe(true);
+  });
+
+  it('returns false when AUTH_SERVICE is not set', () => {
+    const env = createMockEnv();
+    expect(isAuthServiceMode(env)).toBe(false);
+  });
+});
+
+describe('validateWithAuthService', () => {
+  function makeFetcher(body: unknown, status = 200): Fetcher {
+    return {
+      fetch: vi.fn().mockResolvedValue(
+        new Response(JSON.stringify(body), { status }),
+      ),
+    } as unknown as Fetcher;
+  }
+
+  it('returns null when cookie header is null', async () => {
+    const fetcher = makeFetcher({ user: { email: 'u@example.com' } });
+    expect(await validateWithAuthService(null, fetcher)).toBeNull();
+  });
+
+  it('returns null when no session cookie is present', async () => {
+    const fetcher = makeFetcher({ user: { email: 'u@example.com' } });
+    expect(await validateWithAuthService('other=value; session=abc', fetcher)).toBeNull();
+  });
+
+  it('accepts bare better-auth.session_token cookie', async () => {
+    const fetcher = makeFetcher({ user: { email: 'user@example.com', name: 'User' } });
+    const result = await validateWithAuthService('better-auth.session_token=tok123', fetcher);
+    expect(result).toEqual({ email: 'user@example.com', name: 'User' });
+  });
+
+  it('accepts __Secure- prefixed better-auth.session_token cookie', async () => {
+    const fetcher = makeFetcher({ user: { email: 'secure@example.com', name: 'Secure' } });
+    const result = await validateWithAuthService('__Secure-better-auth.session_token=tok456', fetcher);
+    expect(result).toEqual({ email: 'secure@example.com', name: 'Secure' });
+  });
+
+  it('returns null when auth service response is not ok', async () => {
+    const fetcher = makeFetcher({ error: 'Unauthorized' }, 401);
+    expect(await validateWithAuthService('better-auth.session_token=tok', fetcher)).toBeNull();
+  });
+
+  it('returns null when auth service returns no user', async () => {
+    const fetcher = makeFetcher({ user: null });
+    expect(await validateWithAuthService('better-auth.session_token=tok', fetcher)).toBeNull();
+  });
+
+  it('returns null when auth service throws', async () => {
+    const fetcher = {
+      fetch: vi.fn().mockRejectedValue(new Error('Network error')),
+    } as unknown as Fetcher;
+    expect(await validateWithAuthService('better-auth.session_token=tok', fetcher)).toBeNull();
+  });
+});
+
 describe('createAccessMiddleware', () => {
   // Import the function dynamically to allow mocking
   let createAccessMiddleware: typeof import('./middleware').createAccessMiddleware;
@@ -137,6 +199,7 @@ describe('createAccessMiddleware', () => {
     env?: Partial<OpenClawEnv>;
     jwtHeader?: string;
     cookies?: string;
+    url?: string;
   }): {
     c: Context<AppEnv>;
     jsonMock: ReturnType<typeof vi.fn>;
@@ -161,6 +224,7 @@ describe('createAccessMiddleware', () => {
       req: {
         header: (name: string) => headers.get(name),
         raw: { headers },
+        url: options.url ?? 'https://agent.pdx.software/',
       },
       env: createMockEnv(options.env),
       json: jsonMock,
@@ -262,5 +326,97 @@ describe('createAccessMiddleware', () => {
 
     expect(next).not.toHaveBeenCalled();
     expect(redirectMock).toHaveBeenCalledWith('https://team.cloudflareaccess.com', 302);
+  });
+
+  // AUTH_SERVICE (better-auth) mode tests
+  describe('AUTH_SERVICE mode', () => {
+    function makeFetcherForUser(user: { email: string; name?: string } | null, status = 200): Fetcher {
+      return {
+        fetch: vi.fn().mockResolvedValue(
+          new Response(JSON.stringify({ user }), { status }),
+        ),
+      } as unknown as Fetcher;
+    }
+
+    it('returns 401 JSON when no session cookie is present', async () => {
+      const authService = makeFetcherForUser(null, 200);
+      const { c, jsonMock } = createFullMockContext({
+        env: { AUTH_SERVICE: authService },
+        cookies: 'other=value',
+      });
+      const middleware = createAccessMiddleware({ type: 'json' });
+      const next = vi.fn();
+
+      await middleware(c, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ error: 'Unauthorized' }), 401);
+    });
+
+    it('redirects HTML requests to auth service login when no session cookie', async () => {
+      const authService = makeFetcherForUser(null, 200);
+      const { c, redirectMock } = createFullMockContext({
+        env: { AUTH_SERVICE: authService },
+        cookies: 'other=value',
+        url: 'https://agent.pdx.software/admin/',
+      });
+      const middleware = createAccessMiddleware({ type: 'html' });
+      const next = vi.fn();
+
+      await middleware(c, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(redirectMock).toHaveBeenCalledWith(
+        `https://auth.pdx.software/login?redirect=${encodeURIComponent('https://agent.pdx.software/admin/')}`,
+      );
+    });
+
+    it('uses WORKER_URL as trusted origin in redirect when set', async () => {
+      const authService = makeFetcherForUser(null, 200);
+      const { c, redirectMock } = createFullMockContext({
+        env: { AUTH_SERVICE: authService, WORKER_URL: 'https://trusted.example.com' },
+        cookies: 'other=value',
+        url: 'https://workers-dev-hostname.workers.dev/some/path?q=1',
+      });
+      const middleware = createAccessMiddleware({ type: 'html' });
+      const next = vi.fn();
+
+      await middleware(c, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(redirectMock).toHaveBeenCalledWith(
+        `https://auth.pdx.software/login?redirect=${encodeURIComponent('https://trusted.example.com/some/path?q=1')}`,
+      );
+    });
+
+    it('accepts bare better-auth.session_token and calls next with user', async () => {
+      const authService = makeFetcherForUser({ email: 'user@example.com', name: 'User' });
+      const { c, setMock } = createFullMockContext({
+        env: { AUTH_SERVICE: authService },
+        cookies: 'better-auth.session_token=tok123',
+      });
+      const middleware = createAccessMiddleware({ type: 'json' });
+      const next = vi.fn();
+
+      await middleware(c, next);
+
+      expect(next).toHaveBeenCalled();
+      expect(setMock).toHaveBeenCalledWith('accessUser', { email: 'user@example.com', name: 'User' });
+    });
+
+    it('accepts __Secure- prefixed session cookie and calls next with user', async () => {
+      const authService = makeFetcherForUser({ email: 'secure@example.com' });
+      const { c, setMock } = createFullMockContext({
+        env: { AUTH_SERVICE: authService },
+        cookies: '__Secure-better-auth.session_token=tok456',
+      });
+      const middleware = createAccessMiddleware({ type: 'json' });
+      const next = vi.fn();
+
+      await middleware(c, next);
+
+      expect(next).toHaveBeenCalled();
+      expect(setMock).toHaveBeenCalledWith('accessUser', { email: 'secure@example.com', name: undefined });
+    });
   });
 });
