@@ -18,6 +18,6 @@ export default defineConfig({
     command: 'DEV_MODE=true npx wrangler dev --port 8787 --local',
     url: 'http://localhost:8787/sandbox-health',
     reuseExistingServer: !process.env.CI,
-    timeout: 60000,
+    timeout: 120000,
   },
 });
