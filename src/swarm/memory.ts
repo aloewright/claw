@@ -89,7 +89,7 @@ export class HybridMemory {
       cursor = result.list_complete ? undefined : result.cursor;
     } while (cursor);
 
-    return scored.toSorted((a, b) => b.score - a.score).slice(0, 10).map((s) => s.entry);
+    return scored.toSorted((a: { score: number }, b: { score: number }) => b.score - a.score).slice(0, 10).map((s: { entry: MemoryEntry }) => s.entry);
   }
 }
 
