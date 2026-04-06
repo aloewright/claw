@@ -15,7 +15,7 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: 'DEV_MODE=true npx wrangler dev --port 8787',
+    command: 'DEV_MODE=true npx wrangler dev --port 8787 --local',
     url: 'http://localhost:8787/sandbox-health',
     reuseExistingServer: !process.env.CI,
     timeout: 60000,
