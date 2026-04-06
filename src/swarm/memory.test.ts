@@ -76,7 +76,7 @@ describe('HybridMemory', () => {
     // Page size is 2, so this requires 2 pages
     const entries = await memory.list('agent-1');
     expect(entries).toHaveLength(3);
-    const values = entries.map((e) => e.value).sort();
+    const values = entries.map((e) => e.value).toSorted();
     expect(values).toEqual(['val-a', 'val-b', 'val-c']);
   });
 

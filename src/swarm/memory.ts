@@ -54,7 +54,9 @@ export class HybridMemory {
     let cursor: string | undefined;
 
     do {
+      // eslint-disable-next-line no-await-in-loop
       const result = await this.kv.list({ prefix, cursor });
+      // eslint-disable-next-line no-await-in-loop
       const page = await this.getPageEntries(result.keys.map((k) => k.name));
       entries.push(...page.filter((e): e is MemoryEntry => e !== null));
       cursor = result.list_complete ? undefined : result.cursor;
@@ -75,7 +77,9 @@ export class HybridMemory {
     let cursor: string | undefined;
 
     do {
+      // eslint-disable-next-line no-await-in-loop
       const result = await this.kv.list({ prefix, cursor });
+      // eslint-disable-next-line no-await-in-loop
       const page = await this.getPageEntries(result.keys.map((k) => k.name));
       for (const entry of page) {
         if (!entry?.embedding) continue;
@@ -85,7 +89,7 @@ export class HybridMemory {
       cursor = result.list_complete ? undefined : result.cursor;
     } while (cursor);
 
-    return scored.sort((a, b) => b.score - a.score).slice(0, 10).map((s) => s.entry);
+    return scored.toSorted((a, b) => b.score - a.score).slice(0, 10).map((s) => s.entry);
   }
 }
 

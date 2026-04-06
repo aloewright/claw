@@ -83,12 +83,12 @@ export async function syncToR2(sandbox: Sandbox, env: OpenClawEnv): Promise<Sync
   );
 
   // Sync CLI OAuth tokens (non-fatal, preserves auth across restarts)
-  for (const cliDir of ['.claude', '.codex', '.gemini']) {
-    await sandbox.exec(
+  await Promise.all(['.claude', '.codex', '.gemini'].map(cliDir =>
+    sandbox.exec(
       `test -d /root/${cliDir} && rclone sync /root/${cliDir}/ ${remote(`cli-auth/${cliDir}/`)} ${RCLONE_FLAGS} --exclude='*.log' --exclude='*.tmp' || true`,
       { timeout: 120000 },
-    );
-  }
+    )
+  ));
 
   // Write timestamp
   await sandbox.exec(`date -Iseconds > ${LAST_SYNC_FILE}`);

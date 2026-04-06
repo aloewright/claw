@@ -49,6 +49,7 @@ swarm.get('/memory/stats', async (c) => {
     let cursor: string | undefined;
     const allKeys: Array<{ name: string }> = [];
     do {
+      // eslint-disable-next-line no-await-in-loop
       const result = await kv.list({ prefix: 'swarm:', cursor });
       allKeys.push(...result.keys);
       cursor = result.list_complete ? undefined : result.cursor;

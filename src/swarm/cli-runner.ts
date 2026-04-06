@@ -81,6 +81,7 @@ export async function resolveCliTool(
   const candidates = [preferred, ...fallbacks].filter((t) => CLI_TOOLS.has(t));
   for (const tool of candidates) {
     try {
+      // eslint-disable-next-line no-await-in-loop
       const check = await sandbox.exec(`which ${tool} 2>/dev/null && echo "OK"`);
       if (check.stdout?.includes('OK')) return tool;
     } catch { continue; }

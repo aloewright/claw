@@ -48,6 +48,8 @@ describe('TerminalPage', () => {
       readyState: 1,
       send: vi.fn(),
       close: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
     })) as unknown as typeof WebSocket;
   });
 

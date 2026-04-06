@@ -75,14 +75,14 @@ export default function TerminalPage({ onBack }: TerminalPageProps) {
     );
     wsRef.current = ws;
 
-    ws.onopen = () => term.writeln('\x1b[32mConnected to sandbox terminal\x1b[0m\r\n');
-    ws.onmessage = (event) => term.write(event.data);
-    ws.onclose = () => term.writeln('\r\n\x1b[31mSession closed\x1b[0m');
-    ws.onerror = (err) => {
+    ws.addEventListener('open', () => term.writeln('\x1b[32mConnected to sandbox terminal\x1b[0m\r\n'));
+    ws.addEventListener('message', (event) => term.write(event.data));
+    ws.addEventListener('close', () => term.writeln('\r\n\x1b[31mSession closed\x1b[0m'));
+    ws.addEventListener('error', (err) => {
       term.writeln('\r\n\x1b[31mConnection error\x1b[0m');
       console.error('Terminal WebSocket error:', err);
       ws.close();
-    };
+    });
 
     term.onData((data) => {
       if (ws.readyState === WebSocket.OPEN) {

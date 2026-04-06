@@ -56,6 +56,7 @@ export async function autoApproveDevices(sandbox: Sandbox, env: OpenClawEnv): Pr
       continue;
     }
     try {
+      // eslint-disable-next-line no-await-in-loop
       const approveProc = await sandbox.startProcess(
         `openclaw devices approve ${device.requestId} --url ws://localhost:${OPENCLAW_PORT}${tokenArg}`,
       );
@@ -164,7 +165,7 @@ export async function ensureOpenClawGateway(sandbox: Sandbox, env: OpenClawEnv):
       const cooldownKey = 'gateway-restart';
       if (isRestartCoolingDown(cooldownKey)) {
         console.log('Restart cooldown active — skipping kill/restart, will retry on next request');
-        throw new Error('Gateway is unresponsive and restart cooldown is active. Please try again shortly.');
+        throw new Error('Gateway is unresponsive and restart cooldown is active. Please try again shortly.', { cause: _e });
       }
       recordRestartAttempt(cooldownKey);
       console.log('Existing process not reachable after full timeout, killing and restarting...');
