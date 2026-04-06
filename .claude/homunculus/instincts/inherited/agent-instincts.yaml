@@ -1,0 +1,364 @@
+# Instincts generated from https://github.com/aloewright/agent
+# Generated: 2026-04-06T00:24:21.443Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: agent-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/aloewright/agent
+---
+
+# Agent Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: fix
+
+## Evidence
+
+- 2 commits analyzed
+- Detected conventional commit pattern
+- Examples: fix(auth+ci): fix auth redirect blank screen and update CI to Node.js 22, fix(auth): use WORKER_URL as trusted origin in redirect; add AUTH_SERVICE tests
+
+---
+id: agent-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/aloewright/agent
+---
+
+# Agent Commit Length
+
+## Action
+
+Write moderate-length commit messages (~76 characters)
+
+## Evidence
+
+- Average commit message length: 76 chars
+- Based on 2 commits
+
+---
+id: agent-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/aloewright/agent
+---
+
+# Agent Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: agent-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/aloewright/agent
+---
+
+# Agent Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: agent-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/aloewright/agent
+---
+
+# Agent Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: agent-test-colocate
+trigger: "when writing tests"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/aloewright/agent
+---
+
+# Agent Test Colocate
+
+## Action
+
+Place test file next to the source file (e.g., Button.test.tsx next to Button.tsx)
+
+## Evidence
+
+- Colocated test pattern detected
+- Tests live alongside source files
+
+---
+id: agent-workflow-auth-middleware-update-and-test
+trigger: "when doing auth middleware update and test"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/aloewright/agent
+---
+
+# Agent Workflow Auth Middleware Update And Test
+
+## Action
+
+Follow the auth-middleware-update-and-test workflow:
+1. Modify authentication logic in src/auth/middleware.ts
+2. Update or add tests in src/auth/middleware.test.ts
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/auth/middleware.ts, src/auth/middleware.test.ts
+
+---
+id: agent-instinct-filename-camelCase
+trigger: "When creating or renaming a file in the codebase"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: aloewright/agent
+---
+
+# Agent Instinct Filename CamelCase
+
+## Action
+
+Name the file using camelCase convention
+
+## Evidence
+
+- Pattern in namingConventions.files
+- Observed in src/auth/middleware.ts
+
+---
+id: agent-instinct-function-camelCase
+trigger: "When defining a new function"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: aloewright/agent
+---
+
+# Agent Instinct Function CamelCase
+
+## Action
+
+Name the function using camelCase convention
+
+## Evidence
+
+- Pattern in namingConventions.functions
+
+---
+id: agent-instinct-class-PascalCase
+trigger: "When defining a new class"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: aloewright/agent
+---
+
+# Agent Instinct Class PascalCase
+
+## Action
+
+Name the class using PascalCase convention
+
+## Evidence
+
+- Pattern in namingConventions.classes
+
+---
+id: agent-instinct-constant-SCREAMING_SNAKE_CASE
+trigger: "When defining a constant"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: aloewright/agent
+---
+
+# Agent Instinct Constant SCREAMING_SNAKE_CASE
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE convention
+
+## Evidence
+
+- Pattern in namingConventions.constants
+
+---
+id: agent-instinct-import-relative
+trigger: "When importing modules within the project"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: aloewright/agent
+---
+
+# Agent Instinct Import Relative
+
+## Action
+
+Use relative import paths
+
+## Evidence
+
+- Pattern in importStyle
+
+---
+id: agent-instinct-export-named
+trigger: "When exporting functions, classes, or constants"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: aloewright/agent
+---
+
+# Agent Instinct Export Named
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in exportStyle
+
+---
+id: agent-instinct-test-colocated
+trigger: "When adding or updating tests for a module"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: aloewright/agent
+---
+
+# Agent Instinct Test Colocated
+
+## Action
+
+Place the test file in the same directory as the module (colocated)
+
+## Evidence
+
+- Pattern in architecture.testLocation
+- Seen in src/auth/middleware.test.ts
+
+---
+id: agent-instinct-test-update-after-auth-change
+trigger: "When modifying authentication logic in src/auth/middleware.ts"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: aloewright/agent
+---
+
+# Agent Instinct Test Update After Auth Change
+
+## Action
+
+Update or add corresponding tests in src/auth/middleware.test.ts
+
+## Evidence
+
+- Workflow: auth-middleware-update-and-test
+- Commit sequence in workflow
+
+---
+id: agent-instinct-commit-conventional-fix-prefix
+trigger: "When committing a fix to the repository"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: aloewright/agent
+---
+
+# Agent Instinct Commit Conventional Fix Prefix
+
+## Action
+
+Use the conventional commit format with the 'fix' prefix (e.g., fix(auth): ...)
+
+## Evidence
+
+- Pattern in commits.prefixes
+- Seen in commit: fix(auth+ci): fix auth redirect blank screen and update CI to Node.js 22
+
+---
+id: agent-instinct-commit-message-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: aloewright/agent
+---
+
+# Agent Instinct Commit Message Length
+
+## Action
+
+Keep the commit message concise, around 76 characters on average
+
+## Evidence
+
+- Pattern in commits.averageLength
+
+---
+id: agent-instinct-auth-middleware-update-and-test
+trigger: "When someone needs to fix, update, or enhance authentication logic and verify it with tests"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: aloewright/agent
+---
+
+# Agent Instinct Auth Middleware Update And Test
+
+## Action
+
+Modify authentication logic in src/auth/middleware.ts, then update or add tests in src/auth/middleware.test.ts
+
+## Evidence
+
+- Workflow: auth-middleware-update-and-test
+- Commit sequence and files involved
+
