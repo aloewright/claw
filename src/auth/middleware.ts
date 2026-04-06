@@ -29,9 +29,12 @@ export async function validateWithAuthService(
   if (!cookieHeader) return null;
 
   // Check for better-auth session cookie
-  const hasSessionCookie = cookieHeader.split(';').some((c) => 
-    c.trim().startsWith('better-auth.session_token=')
-  );
+  // Check for session cookie with or without __Secure- prefix (added when baseURL is https://)
+  const hasSessionCookie = cookieHeader.split(';').some((c) => {
+    const trimmed = c.trim();
+    return trimmed.startsWith('better-auth.session_token=') ||
+      trimmed.startsWith('__Secure-better-auth.session_token=');
+  });
   if (!hasSessionCookie) return null;
 
   try {
@@ -120,9 +123,13 @@ export function createAccessMiddleware(options: AccessMiddlewareOptions) {
       // Not authenticated — redirect to login for HTML, 401 for API
       if (type === 'html') {
         const url = new URL(c.req.url);
-        return c.redirect(`/login?next=${encodeURIComponent(url.pathname + url.search)}`);
+        // Use WORKER_URL if configured (trusted origin), otherwise fall back to the request origin.
+        // This prevents open-redirect issues when the worker is reachable under alternate hostnames.
+        const origin = c.env.WORKER_URL ?? url.origin;
+        const redirectUrl = `${origin}${url.pathname}${url.search}`;
+        return c.redirect(`https://auth.pdx.software/login?redirect=${encodeURIComponent(redirectUrl)}`);
       }
-      return c.json({ error: 'Unauthorized', hint: 'Please log in at /login' }, 401);
+      return c.json({ error: 'Unauthorized', hint: 'Please log in at https://auth.pdx.software/login' }, 401);
     }
 
     const teamDomain = c.env.CF_ACCESS_TEAM_DOMAIN;

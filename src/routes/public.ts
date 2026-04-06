@@ -85,7 +85,7 @@ function sanitizeNext(raw: string): string {
 publicRoutes.get('/login', (c) => {
   if (!isAuthServiceMode(c.env)) return c.redirect('/_admin/');
   const next = c.req.query('next') ?? '/';
-  return c.redirect(`https://auth.pdx.software?redirect=${encodeURIComponent('https://agent.pdx.software' + sanitizeNext(next))}`);
+  return c.redirect(`https://auth.pdx.software/login?redirect=${encodeURIComponent('https://agent.pdx.software' + sanitizeNext(next))}`);
 });
 
 // GET /auth/sign-out — forward to auth service for sign-out and redirect
