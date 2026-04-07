@@ -10,6 +10,7 @@ import { waitForProcess } from './utils';
 // Restart rate-limiting (module-level, per Worker isolate)
 // ---------------------------------------------------------------------------
 const RESTART_COOLDOWN_MS = 30_000; // 30 s between restart attempts
+const QUICK_PROBE_MS = 10_000;
 const lastRestartAttempt: Map<string, number> = new Map();
 
 function isRestartCoolingDown(key: string): boolean {
@@ -153,7 +154,7 @@ export async function ensureOpenClawGateway(sandbox: Sandbox, env: OpenClawEnv):
     const waitTimeoutMs =
       existingProcess.status === 'starting'
         ? STARTUP_TIMEOUT_MS
-        : 10_000;
+        : QUICK_PROBE_MS;
     try {
       console.log(
         'Waiting for existing gateway on port',
